@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -14,6 +16,16 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         useMaterial3: true,
       ),
+      locale: Locale('ru', 'RU'),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('ru', 'RU'),
+        Locale('en', 'US'),
+      ],
       home: HomeScreen(),
       debugShowCheckedModeBanner: false,
     );

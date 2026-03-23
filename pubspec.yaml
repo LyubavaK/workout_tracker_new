@@ -1,4 +1,4 @@
-name: workout_tracker_new
+name: workout_tracker
 description: Workout tracking application
 publish_to: 'none'
 version: 1.0.0+1
@@ -9,10 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # Только базовые зависимости для начала
+  flutter_localizations:
+    sdk: flutter
   shared_preferences: ^2.2.2
-  intl: ^0.18.1
+  intl: ^0.20.2
   fl_chart: ^0.66.0
 
 dev_dependencies:
