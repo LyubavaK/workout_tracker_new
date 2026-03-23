@@ -45,19 +45,38 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
-  int get _totalCalories =>
-      _filteredWorkouts.fold(0, (sum, w) => sum + w.totalCalories);
-  int get _totalMinutes =>
-      _filteredWorkouts.fold(0, (sum, w) => sum + w.totalDuration);
+  int get _totalCalories {
+    int total = 0;
+    for (var w in _filteredWorkouts) {
+      total += w.totalCalories;
+    }
+    return total;
+  }
+
+  int get _totalMinutes {
+    int total = 0;
+    for (var w in _filteredWorkouts) {
+      total += w.totalDuration;
+    }
+    return total;
+  }
+
   int get _totalWorkouts => _filteredWorkouts.length;
+
   double get _avgDuration =>
       _totalWorkouts > 0 ? _totalMinutes / _totalWorkouts : 0;
+
+  double get _avgCalories =>
+      _totalWorkouts > 0 ? _totalCalories / _totalWorkouts : 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Статистика'),
+        title: Text(
+          'Статистика',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -69,6 +88,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               dropdownColor: Colors.deepPurple,
               icon: Icon(Icons.calendar_today, color: Colors.white),
               underline: SizedBox(),
+              style: TextStyle(color: Colors.white, fontSize: 16),
               items: [
                 DropdownMenuItem(
                     value: 'week',
@@ -81,6 +101,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 DropdownMenuItem(
                     value: 'year',
                     child: Text('Год', style: TextStyle(color: Colors.white))),
+                DropdownMenuItem(
+                    value: 'all',
+                    child: Text('Всё время',
+                        style: TextStyle(color: Colors.white))),
               ],
               onChanged: (value) {
                 setState(() => _period = value!);
@@ -90,78 +114,76 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.deepPurple),
+                  SizedBox(height: 16),
+                  Text('Загрузка...', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            )
           : RefreshIndicator(
               onRefresh: _loadData,
+              color: Colors.deepPurple,
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Краткая статистика
+                    // Краткая статистика - улучшенная видимость
                     Row(
                       children: [
                         Expanded(
-                          child: _buildStatCard('Тренировок', '$_totalWorkouts',
-                              Icons.fitness_center, Colors.blue),
+                          child: _buildStatCard(
+                            'Тренировок',
+                            '$_totalWorkouts',
+                            Icons.fitness_center,
+                            Colors.blue,
+                          ),
                         ),
                         SizedBox(width: 12),
                         Expanded(
-                          child: _buildStatCard('Минут', '$_totalMinutes',
-                              Icons.timer, Colors.green),
+                          child: _buildStatCard(
+                            'Минут',
+                            '$_totalMinutes',
+                            Icons.timer,
+                            Colors.green,
+                          ),
                         ),
                         SizedBox(width: 12),
                         Expanded(
-                          child: _buildStatCard('Калорий', '$_totalCalories',
-                              Icons.local_fire_department, Colors.orange),
+                          child: _buildStatCard(
+                            'Калорий',
+                            '$_totalCalories',
+                            Icons.local_fire_department,
+                            Colors.orange,
+                          ),
                         ),
                       ],
                     ),
 
-                    SizedBox(height: 20),
+                    SizedBox(height: 16),
 
-                    // Средняя длительность
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
+                    // Средние показатели
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildAverageCard(
+                            'Средняя длительность',
+                            '${_avgDuration.toInt()} мин',
+                            Icons.timer,
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.deepPurple.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Icons.show_chart,
-                                color: Colors.deepPurple),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildAverageCard(
+                            'Средние калории',
+                            '${_avgCalories.toInt()} ккал',
+                            Icons.local_fire_department,
                           ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Средняя длительность',
-                                    style: TextStyle(color: Colors.grey)),
-                                Text(
-                                  '${_avgDuration.toInt()} минут',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
 
                     SizedBox(height: 20),
@@ -186,12 +208,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.bar_chart, color: Colors.deepPurple),
-                                SizedBox(width: 8),
-                                Text('Динамика калорий',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.deepPurple.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.bar_chart,
+                                      color: Colors.deepPurple, size: 20),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Динамика калорий',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ],
                             ),
                             SizedBox(height: 16),
@@ -208,8 +240,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                         showTitles: true,
                                         reservedSize: 40,
                                         getTitlesWidget: (value, meta) {
-                                          return Text('${value.toInt()}',
-                                              style: TextStyle(fontSize: 10));
+                                          return Text(
+                                            '${value.toInt()}',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500),
+                                          );
                                         },
                                       ),
                                     ),
@@ -217,12 +253,33 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                       sideTitles: SideTitles(
                                         showTitles: true,
                                         getTitlesWidget: _getBottomTitles,
-                                        reservedSize: 50,
+                                        reservedSize: 40,
                                       ),
                                     ),
+                                    rightTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    topTitles: AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
                                   ),
-                                  gridData: FlGridData(show: true),
-                                  borderData: FlBorderData(show: false),
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawHorizontalLine: true,
+                                    drawVerticalLine: false,
+                                    getDrawingHorizontalLine: (value) {
+                                      return FlLine(
+                                        color: Colors.grey.shade300,
+                                        strokeWidth: 0.5,
+                                      );
+                                    },
+                                  ),
+                                  borderData: FlBorderData(
+                                    show: true,
+                                    border: Border.all(
+                                        color: Colors.grey.shade300,
+                                        width: 0.5),
+                                  ),
                                 ),
                               ),
                             ),
@@ -232,7 +289,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
                     SizedBox(height: 20),
 
-                    // Лучшая тренировка
+                    // Достижения
                     if (_filteredWorkouts.isNotEmpty)
                       Container(
                         padding: EdgeInsets.all(16),
@@ -252,24 +309,64 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.emoji_events, color: Colors.amber),
-                                SizedBox(width: 8),
-                                Text('Достижения',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade100,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.emoji_events,
+                                      color: Colors.amber.shade700, size: 20),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Достижения',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ],
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(height: 16),
                             _buildAchievementRow('🏆 Лучшая по калориям',
                                 _getBestWorkoutByCalories()),
+                            SizedBox(height: 12),
                             _buildAchievementRow(
                                 '⏱️ Самая длительная', _getLongestWorkout()),
+                            SizedBox(height: 12),
                             _buildAchievementRow(
                                 '📅 Самый активный день', _getBestDay()),
+                            SizedBox(height: 12),
+                            _buildAchievementRow('💪 Любимое упражнение',
+                                _getFavoriteExercise()),
                           ],
                         ),
                       ),
+
+                    if (_filteredWorkouts.isEmpty)
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 50),
+                        child: Column(
+                          children: [
+                            Icon(Icons.show_chart,
+                                size: 64, color: Colors.grey.shade400),
+                            SizedBox(height: 16),
+                            Text(
+                              'Нет данных для статистики',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.grey.shade600),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Добавьте тренировки чтобы увидеть статистику',
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -282,30 +379,81 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.9),
+            color.withOpacity(0.7),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: color.withOpacity(0.3),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
+          Icon(icon, size: 28, color: Colors.white),
+          SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(fontSize: 12, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAverageCard(String title, String value, IconData icon) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.deepPurple.shade100),
+      ),
+      child: Row(
+        children: [
           Container(
             padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: Colors.deepPurple.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 28, color: color),
+            child: Icon(icon, size: 24, color: Colors.deepPurple),
           ),
-          SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(title, style: TextStyle(fontSize: 11, color: Colors.grey)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style:
+                        TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -313,9 +461,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   double _getMaxCalories() {
     if (_filteredWorkouts.isEmpty) return 100;
-    double max = _filteredWorkouts
-        .map((w) => w.totalCalories.toDouble())
-        .reduce((a, b) => a > b ? a : b);
+    double max = 0;
+    for (var w in _filteredWorkouts) {
+      if (w.totalCalories > max) max = w.totalCalories.toDouble();
+    }
     return max * 1.2;
   }
 
@@ -323,7 +472,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     List<BarChartGroupData> groups = [];
     List<Workout> workouts = _filteredWorkouts;
 
-    // Показываем последние 7 или 10 тренировок
+    // Показываем последние 7 тренировок для недели, или 10 для месяца/года
     int count = workouts.length > 10 ? 10 : workouts.length;
     for (int i = 0; i < count; i++) {
       groups.add(
@@ -333,14 +482,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             BarChartRodData(
               toY: workouts[i].totalCalories.toDouble(),
               color: Colors.deepPurple,
-              width: 20,
+              width: 25,
               borderRadius: BorderRadius.circular(4),
             ),
           ],
         ),
       );
     }
-    return groups;
+    return groups.reversed.toList();
   }
 
   Widget _getBottomTitles(double value, TitleMeta meta) {
@@ -351,23 +500,31 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       padding: EdgeInsets.only(top: 8),
       child: Text(
         DateFormat('dd.MM').format(workouts[index].date),
-        style: TextStyle(fontSize: 10),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
       ),
     );
   }
 
   String _getBestWorkoutByCalories() {
     if (_filteredWorkouts.isEmpty) return 'Нет данных';
-    final best = _filteredWorkouts
-        .reduce((a, b) => a.totalCalories > b.totalCalories ? a : b);
-    return '${best.totalCalories} ккал (${DateFormat('dd.MM').format(best.date)})';
+    Workout? best;
+    for (var w in _filteredWorkouts) {
+      if (best == null || w.totalCalories > best.totalCalories) {
+        best = w;
+      }
+    }
+    return '${best!.totalCalories} ккал (${DateFormat('dd.MM').format(best.date)})';
   }
 
   String _getLongestWorkout() {
     if (_filteredWorkouts.isEmpty) return 'Нет данных';
-    final longest = _filteredWorkouts
-        .reduce((a, b) => a.totalDuration > b.totalDuration ? a : b);
-    return '${longest.totalDuration} минут (${DateFormat('dd.MM').format(longest.date)})';
+    Workout? longest;
+    for (var w in _filteredWorkouts) {
+      if (longest == null || w.totalDuration > longest.totalDuration) {
+        longest = w;
+      }
+    }
+    return '${longest!.totalDuration} мин (${DateFormat('dd.MM').format(longest.date)})';
   }
 
   String _getBestDay() {
@@ -388,13 +545,56 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return '$bestDay ($maxCount тренировок)';
   }
 
+  String _getFavoriteExercise() {
+    if (_filteredWorkouts.isEmpty) return 'Нет данных';
+    Map<String, int> exercises = {};
+    for (var w in _filteredWorkouts) {
+      for (var e in w.exercises) {
+        String name = e.name.replaceAll(RegExp(r'[🏋️🦵🧘🏃💪⚡]'), '').trim();
+        exercises[name] = (exercises[name] ?? 0) + 1;
+      }
+    }
+    String favorite = '';
+    int maxCount = 0;
+    exercises.forEach((name, count) {
+      if (count > maxCount) {
+        maxCount = count;
+        favorite = name;
+      }
+    });
+    return '$favorite ($maxCount раз)';
+  }
+
   Widget _buildAchievementRow(String title, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
-          Expanded(child: Text(title, style: TextStyle(color: Colors.grey))),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade700,
+              ),
+            ),
+          ),
         ],
       ),
     );
