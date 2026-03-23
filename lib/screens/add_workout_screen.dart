@@ -57,15 +57,113 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   }
 
   void _addExercise(Exercise exercise) {
+    // Создаем новое упражнение с тем же именем, но уникальным ID
+    final newExercise = Exercise(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: exercise.name,
+      durationMinutes: exercise.durationMinutes,
+      caloriesPerMinute: exercise.caloriesPerMinute,
+    );
     setState(() {
-      _selectedExercises.add(exercise);
+      _selectedExercises.add(newExercise);
     });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✅ ${exercise.name} добавлено'),
+        duration: Duration(seconds: 1),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   void _removeExercise(int index) {
     setState(() {
       _selectedExercises.removeAt(index);
     });
+  }
+
+  void _editExercise(int index) {
+    final exercise = _selectedExercises[index];
+    _showEditExerciseDialog(exercise, index);
+  }
+
+  void _showEditExerciseDialog(Exercise exercise, int index) {
+    int duration = exercise.durationMinutes;
+    int calories = exercise.caloriesPerMinute;
+    final nameController = TextEditingController(text: exercise.name);
+    final durationController = TextEditingController(text: duration.toString());
+    final caloriesController = TextEditingController(text: calories.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Редактировать упражнение'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: 'Название',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: durationController,
+              decoration: InputDecoration(
+                labelText: 'Длительность (минуты)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: caloriesController,
+              decoration: InputDecoration(
+                labelText: 'Калорий в минуту',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final updatedExercise = Exercise(
+                id: exercise.id,
+                name: nameController.text,
+                durationMinutes:
+                    int.tryParse(durationController.text) ?? duration,
+                caloriesPerMinute:
+                    int.tryParse(caloriesController.text) ?? calories,
+              );
+              setState(() {
+                _selectedExercises[index] = updatedExercise;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('✏️ Упражнение обновлено'),
+                  duration: Duration(seconds: 1),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+            },
+            child: Text('Сохранить'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveWorkout() async {
@@ -105,366 +203,365 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.deepPurple.shade50,
-              Colors.white,
-            ],
-          ),
-        ),
-        child: ListView(
-          padding: EdgeInsets.all(16),
-          children: [
-            // Дата тренировки
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.deepPurple.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.calendar_today, color: Colors.deepPurple),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          // Дата тренировки
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
                 ),
-                title: Text('Дата тренировки',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  DateFormat('dd MMMM yyyy', 'ru').format(_selectedDate),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-                onTap: () => _selectDate(context),
-              ),
+              ],
             ),
-
-            SizedBox(height: 20),
-
-            // Упражнения
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+            child: ListTile(
+              leading: Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.calendar_today, color: Colors.deepPurple),
               ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(Icons.fitness_center,
-                                  color: Colors.deepPurple),
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              'Упражнения',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () => _showExerciseDialog(),
-                          icon: Icon(Icons.add, size: 18),
-                          label: Text('Добавить'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
+              title: Text('Дата тренировки',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                DateFormat('dd MMMM yyyy', 'ru').format(_selectedDate),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              onTap: () => _selectDate(context),
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // Упражнения
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.shade100,
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            child: Icon(Icons.fitness_center,
+                                color: Colors.deepPurple),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_selectedExercises.isEmpty)
-                    Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Column(
-                        children: [
-                          Icon(Icons.fitness_center,
-                              size: 64, color: Colors.grey.shade300),
-                          SizedBox(height: 16),
+                          SizedBox(width: 12),
                           Text(
-                            'Нет упражнений',
+                            'Упражнения',
                             style: TextStyle(
-                                fontSize: 16, color: Colors.grey.shade600),
-                          ),
-                          Text(
-                            'Нажмите "Добавить" чтобы выбрать',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey.shade500),
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _selectedExercises.length,
-                      itemBuilder: (context, index) {
-                        final exercise = _selectedExercises[index];
-                        return Container(
-                          margin:
-                              EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.shade50,
+                      ElevatedButton.icon(
+                        onPressed: () => _showExerciseDialog(),
+                        icon: Icon(Icons.add, size: 18),
+                        label: Text('Добавить'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.deepPurple,
-                              child: Text('${index + 1}',
-                                  style: TextStyle(color: Colors.white)),
-                            ),
-                            title: Text(exercise.name,
-                                style: TextStyle(fontWeight: FontWeight.w500)),
-                            subtitle: Text(
-                              '${exercise.durationMinutes} мин • ${exercise.caloriesBurned} ккал',
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete_outline,
-                                  color: Colors.red.shade400),
-                              onPressed: () => _removeExercise(index),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // Заметки
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.note, color: Colors.deepPurple),
                         ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Заметки',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    TextField(
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'Ваши впечатления, успехи, сложности...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.deepPurple, width: 2),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
                       ),
-                      onChanged: (value) => _notes = value,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // Итоговая информация
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.deepPurple.shade700,
-                    Colors.deepPurple.shade900
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    spreadRadius: 1,
-                    blurRadius: 15,
-                    offset: Offset(0, 4),
+                    ],
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Icon(Icons.timer, color: Colors.white70, size: 28),
-                        SizedBox(height: 8),
-                        Text(
-                          '$_totalDuration',
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text('минут',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                    Container(
-                      height: 40,
-                      width: 1,
-                      color: Colors.white30,
-                    ),
-                    Column(
-                      children: [
-                        Icon(Icons.local_fire_department,
-                            color: Colors.orange.shade300, size: 28),
-                        SizedBox(height: 8),
-                        Text(
-                          '$_totalCalories',
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text('калорий',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 12)),
-                      ],
-                    ),
-                    Container(
-                      height: 40,
-                      width: 1,
-                      color: Colors.white30,
-                    ),
-                    Column(
+                ),
+                if (_selectedExercises.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Column(
                       children: [
                         Icon(Icons.fitness_center,
-                            color: Colors.white70, size: 28),
-                        SizedBox(height: 8),
+                            size: 64, color: Colors.grey.shade300),
+                        SizedBox(height: 16),
                         Text(
-                          '${_selectedExercises.length}',
+                          'Нет упражнений',
                           style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                              fontSize: 16, color: Colors.grey.shade600),
                         ),
-                        Text('упражнений',
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 12)),
+                        Text(
+                          'Нажмите "Добавить" чтобы выбрать',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade500),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 30),
-
-            // Кнопка сохранения - УЛУЧШЕННАЯ
-            Container(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saveWorkout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _selectedExercises.length,
+                    itemBuilder: (context, index) {
+                      final exercise = _selectedExercises[index];
+                      return Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.deepPurple,
+                            child: Text('${index + 1}',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 12)),
+                          ),
+                          title: Text(exercise.name,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500, fontSize: 14)),
+                          subtitle: Text(
+                            '${exercise.durationMinutes} мин • ${exercise.caloriesBurned} ккал',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit,
+                                    size: 18, color: Colors.blue.shade400),
+                                onPressed: () => _editExercise(index),
+                                tooltip: 'Редактировать',
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline,
+                                    size: 18, color: Colors.red.shade400),
+                                onPressed: () => _removeExercise(index),
+                                tooltip: 'Удалить',
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  elevation: 5,
-                  shadowColor: Colors.deepPurple.withOpacity(0.5),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // Заметки
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.save, size: 24),
-                    SizedBox(width: 12),
-                    Text(
-                      'СОХРАНИТЬ ТРЕНИРОВКУ',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.note, color: Colors.deepPurple),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Заметки',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: 'Ваши впечатления, успехи, сложности...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            BorderSide(color: Colors.deepPurple, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
                     ),
-                  ],
-                ),
+                    onChanged: (value) => _notes = value,
+                  ),
+                ],
               ),
             ),
+          ),
 
-            SizedBox(height: 20),
-          ],
-        ),
+          SizedBox(height: 20),
+
+          // Итоговая информация
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.deepPurple.shade700,
+                  Colors.deepPurple.shade900
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.deepPurple.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 15,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      Icon(Icons.timer, color: Colors.white70, size: 24),
+                      SizedBox(height: 4),
+                      Text(
+                        '$_totalDuration',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      Text('минут',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                  Container(
+                    height: 30,
+                    width: 1,
+                    color: Colors.white30,
+                  ),
+                  Column(
+                    children: [
+                      Icon(Icons.local_fire_department,
+                          color: Colors.orange.shade300, size: 24),
+                      SizedBox(height: 4),
+                      Text(
+                        '$_totalCalories',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      Text('калорий',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                  Container(
+                    height: 30,
+                    width: 1,
+                    color: Colors.white30,
+                  ),
+                  Column(
+                    children: [
+                      Icon(Icons.fitness_center,
+                          color: Colors.white70, size: 24),
+                      SizedBox(height: 4),
+                      Text(
+                        '${_selectedExercises.length}',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      Text('упр.',
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // Кнопка сохранения
+          Container(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _saveWorkout,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.save, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'СОХРАНИТЬ ТРЕНИРОВКУ',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SizedBox(height: 16),
+        ],
       ),
     );
   }
@@ -477,7 +574,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       ),
       builder: (context) {
         return Container(
-          height: 500,
+          height: 450,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -485,14 +582,14 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           child: Column(
             children: [
               Container(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border:
                       Border(bottom: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Text(
                   'Выберите упражнение',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
               Expanded(
@@ -500,39 +597,33 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                   itemCount: _availableExercises.length,
                   itemBuilder: (context, index) {
                     final exercise = _availableExercises[index];
-                    final isSelected = _selectedExercises.contains(exercise);
                     return ListTile(
                       leading: Container(
                         padding: EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.green.shade100
-                              : Colors.deepPurple.shade100,
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.deepPurple.shade100,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(
-                          isSelected ? Icons.check : Icons.fitness_center,
-                          color: isSelected ? Colors.green : Colors.deepPurple,
-                        ),
+                        child: Icon(Icons.fitness_center,
+                            color: Colors.deepPurple, size: 20),
                       ),
                       title: Text(
                         exercise.name,
                         style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
+                            fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       subtitle: Text(
-                          '${exercise.durationMinutes} мин • ${exercise.caloriesBurned} ккал'),
-                      trailing: isSelected
-                          ? Icon(Icons.check_circle, color: Colors.green)
-                          : null,
-                      onTap: () {
-                        if (!isSelected) {
+                        '${exercise.durationMinutes} мин • ${exercise.caloriesBurned} ккал',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.add_circle_outline,
+                            color: Colors.deepPurple),
+                        onPressed: () {
                           _addExercise(exercise);
-                        }
-                        Navigator.pop(context);
-                      },
+                          Navigator.pop(context);
+                        },
+                      ),
                     );
                   },
                 ),
