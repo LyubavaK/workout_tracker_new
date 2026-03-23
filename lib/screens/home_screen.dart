@@ -36,9 +36,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Мои тренировки'),
+        title: Text(
+          'Мои тренировки',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: Icon(Icons.history),
@@ -59,22 +63,87 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Статистика
-                    Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildStat('Тренировок', '$_totalWorkouts',
-                                Icons.fitness_center, Colors.blue),
-                            _buildStat('Минут', '$_totalMinutes', Icons.timer,
-                                Colors.green),
-                            _buildStat('Калорий', '$_totalCalories',
-                                Icons.local_fire_department, Colors.orange),
+                    // Приветствие
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.deepPurple.shade700,
+                            Colors.deepPurple.shade900
                           ],
                         ),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(Icons.sports_gymnastics,
+                                color: Colors.white, size: 32),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Привет, спортсмен!',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('dd MMMM yyyy', 'ru')
+                                      .format(DateTime.now()),
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    // Статистика
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Тренировок',
+                            '$_totalWorkouts',
+                            Icons.fitness_center,
+                            Colors.blue,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Минут',
+                            '$_totalMinutes',
+                            Icons.timer,
+                            Colors.green,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Калорий',
+                            '$_totalCalories',
+                            Icons.local_fire_department,
+                            Colors.orange,
+                          ),
+                        ),
+                      ],
                     ),
 
                     SizedBox(height: 24),
@@ -83,9 +152,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Последние тренировки',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(
+                          '📋 Последние тренировки',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -102,18 +173,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(height: 12),
 
                     _workouts.isEmpty
-                        ? Center(
+                        ? Container(
+                            padding: EdgeInsets.all(40),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             child: Column(
                               children: [
-                                SizedBox(height: 50),
                                 Icon(Icons.sports_gymnastics,
-                                    size: 80, color: Colors.grey),
+                                    size: 64, color: Colors.grey.shade400),
                                 SizedBox(height: 16),
-                                Text('Нет тренировок',
-                                    style: TextStyle(
-                                        fontSize: 18, color: Colors.grey)),
-                                Text('Нажмите + чтобы добавить',
-                                    style: TextStyle(color: Colors.grey)),
+                                Text(
+                                  'Нет тренировок',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey.shade600),
+                                ),
+                                Text(
+                                  'Нажмите + чтобы добавить',
+                                  style: TextStyle(color: Colors.grey.shade500),
+                                ),
                               ],
                             ),
                           )
@@ -125,22 +205,41 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemBuilder: (context, index) {
                               final workout =
                                   _workouts.reversed.toList()[index];
-                              return Card(
+                              return Container(
                                 margin: EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      spreadRadius: 1,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.deepPurple,
+                                  leading: Container(
+                                    padding: EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepPurple.shade100,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     child: Icon(Icons.fitness_center,
-                                        color: Colors.white),
+                                        color: Colors.deepPurple),
                                   ),
                                   title: Text(
-                                    DateFormat('dd.MM.yyyy').format(
-                                        workout.date), // Простой формат даты
+                                    DateFormat('dd MMMM yyyy', 'ru')
+                                        .format(workout.date),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   subtitle: Text(
                                     '${workout.totalDuration} мин • ${workout.totalCalories} ккал',
                                   ),
-                                  trailing: Icon(Icons.chevron_right),
+                                  trailing: Icon(Icons.chevron_right,
+                                      color: Colors.grey),
                                   onTap: () {
                                     _showWorkoutDetails(workout);
                                   },
@@ -152,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
             context,
@@ -160,21 +259,51 @@ class _HomeScreenState extends State<HomeScreen> {
           );
           _loadData();
         },
-        child: Icon(Icons.add),
+        icon: Icon(Icons.add),
+        label: Text('Новая тренировка'),
         backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
       ),
     );
   }
 
-  Widget _buildStat(String label, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Icon(icon, size: 28, color: color),
-        SizedBox(height: 8),
-        Text(value,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 28, color: color),
+          ),
+          SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          Text(
+            title,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+        ],
+      ),
     );
   }
 
@@ -182,18 +311,24 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(DateFormat('dd.MM.yyyy').format(workout.date)),
+        title: Text(DateFormat('dd MMMM yyyy', 'ru').format(workout.date)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Длительность: ${workout.totalDuration} минут'),
-            Text('Калории: ${workout.totalCalories} ккал'),
-            Text('Упражнений: ${workout.exercises.length}'),
+            _buildDetailRow(
+                Icons.timer, 'Длительность', '${workout.totalDuration} минут'),
+            SizedBox(height: 8),
+            _buildDetailRow(Icons.local_fire_department, 'Калории',
+                '${workout.totalCalories} ккал'),
+            SizedBox(height: 8),
+            _buildDetailRow(Icons.fitness_center, 'Упражнений',
+                '${workout.exercises.length}'),
             if (workout.notes.isNotEmpty) ...[
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               Divider(),
               Text('Заметки:', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
               Text(workout.notes),
             ],
           ],
@@ -205,6 +340,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.deepPurple),
+        SizedBox(width: 12),
+        Text(label, style: TextStyle(color: Colors.grey.shade600)),
+        Spacer(),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }
